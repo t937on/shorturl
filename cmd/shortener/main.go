@@ -22,19 +22,19 @@ const form = `<html>
 
 var urls map[string]string = make(map[string]string)
 
-func addUrl(longUrl, shortUrl string) bool {
-	if len(longUrl) > 0 && len(shortUrl) > 0 {
-		urls[shortUrl] = longUrl
+func addURL(LongURL, shortURL string) bool {
+	if len(LongURL) > 0 && len(shortURL) > 0 {
+		urls[shortURL] = LongURL
 		return true
 	}
 
 	return false
 }
 
-func findLongUrl(shortUrl string) (string, bool) {
+func findLongURL(shortURL string) (string, bool) {
 
-	if len(shortUrl) > 0 {
-		if val, ok := urls[shortUrl]; ok {
+	if len(shortURL) > 0 {
+		if val, ok := urls[shortURL]; ok {
 			return val, true
 		}
 	}
@@ -45,10 +45,10 @@ func findLongUrl(shortUrl string) (string, bool) {
 func mainPage(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
-		longUrl := r.FormValue("longurl")
-		shortUrl := r.FormValue("shorturl")
-		if addUrl(longUrl, shortUrl) {
-			path := "http://" + r.Host + "/" + shortUrl
+		LongURL := r.FormValue("longurl")
+		shortURL := r.FormValue("shorturl")
+		if addURL(LongURL, shortURL) {
+			path := "http://" + r.Host + "/" + shortURL
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(http.StatusCreated)
 			w.Write([]byte(path))
@@ -63,8 +63,8 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 
 func subPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		if longUrl, ok := findLongUrl(r.URL.Path[1:]); ok {
-			w.Header().Set("Location", longUrl)
+		if LongURL, ok := findLongURL(r.URL.Path[1:]); ok {
+			w.Header().Set("Location", LongURL)
 			w.WriteHeader(http.StatusTemporaryRedirect)
 			return
 		}
