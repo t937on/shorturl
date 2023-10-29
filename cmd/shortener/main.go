@@ -54,11 +54,11 @@ func findLongURL(shortURL string) (string, bool) {
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusCreated)
 		LongURL := r.FormValue("longurl")
 		if shortURL, ok := addURL(LongURL); ok {
 			path := "http://" + r.Host + "/" + shortURL
-			w.Header().Set("Content-Type", "text/plain")
-			w.WriteHeader(http.StatusCreated)
 			w.Write([]byte(path))
 		}
 		return
