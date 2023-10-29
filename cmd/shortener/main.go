@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -13,51 +14,55 @@ const form = `<html>
 	<body>
 		<form action="/" method="post">
 			<label>long url <input type="text" name ="longurl"></label>
-			<label>short url <input type="text" name ="shorturl"></label>
 			<input type="submit" value ="submit">
 		</form>
 	</body>
 </html>
 `
+const length = 8
 
 var urls map[string]string = make(map[string]string)
 
-func addURL(LongURL, shortURL string) bool {
-	if len(LongURL) > 0 && len(shortURL) > 0 {
-		urls[shortURL] = LongURL
-		return true
+func createShortURL(letters []rune, n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
 	}
+	return string(b)
+}
 
-	return false
+func addURL(LongURL string) (string, bool) {
+	if len(LongURL) > 0 {
+		letters := []rune(LongURL)
+		shortURL := createShortURL(letters, length)
+		if len(shortURL) > 0 {
+			urls[shortURL] = LongURL
+			return shortURL, true
+		}
+	}
+	return "", false
 }
 
 func findLongURL(shortURL string) (string, bool) {
-
 	if len(shortURL) > 0 {
 		if val, ok := urls[shortURL]; ok {
 			return val, true
 		}
 	}
-
 	return "", false
 }
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method == http.MethodPost {
 		LongURL := r.FormValue("longurl")
-		shortURL := r.FormValue("shorturl")
-		if addURL(LongURL, shortURL) {
+		if shortURL, ok := addURL(LongURL); ok {
 			path := "http://" + r.Host + "/" + shortURL
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(http.StatusCreated)
 			w.Write([]byte(path))
-		} else {
-			http.Error(w, "Неверные данные ввода", http.StatusNotFound)
 		}
 		return
 	}
-
 	w.Write([]byte(form))
 }
 
@@ -69,12 +74,16 @@ func subPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusBadRequest)
+}
+
+func notFoundPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusBadRequest)
 }
 
 func main() {
-
 	router := mux.NewRouter()
+	router.NotFoundHandler = http.HandlerFunc(notFoundPage)
 	router.HandleFunc("/", mainPage)
 	router.HandleFunc("/{id}", subPage)
 	http.Handle("/", router)
@@ -82,5 +91,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 }
