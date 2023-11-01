@@ -52,7 +52,7 @@ func findLongURL(shortURL string) (string, bool) {
 	return "", false
 }
 
-func mainPage(w http.ResponseWriter, r *http.Request) {
+func MainPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
@@ -66,13 +66,13 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(form))
 }
 
-func subPage(w http.ResponseWriter, r *http.Request) {
+func SubPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		if LongURL, ok := findLongURL(r.URL.Path[1:]); ok {
 			w.Header().Set("Location", LongURL)
-			w.WriteHeader(http.StatusTemporaryRedirect)
-			return
 		}
+		w.WriteHeader(http.StatusTemporaryRedirect)
+		return
 	}
 	w.WriteHeader(http.StatusBadRequest)
 }
@@ -84,8 +84,8 @@ func notFoundPage(w http.ResponseWriter, r *http.Request) {
 func main() {
 	router := mux.NewRouter()
 	router.NotFoundHandler = http.HandlerFunc(notFoundPage)
-	router.HandleFunc("/", mainPage)
-	router.HandleFunc("/{id}", subPage)
+	router.HandleFunc("/", MainPage)
+	router.HandleFunc("/{id}", SubPage)
 	http.Handle("/", router)
 	err := http.ListenAndServe("localhost:8080", nil)
 	if err != nil {
